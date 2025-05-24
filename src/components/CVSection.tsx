@@ -7,8 +7,11 @@ interface CVSectionProps {
   type: SectionType;
   title: string;
   content: SectionData;
+  width?: number;
+  height?: number;
   onDelete?: (id: string) => void;
   onEdit?: (id: string, data: SectionData) => void;
+  onResize?: (id: string, width: number, height: number) => void;
   className?: string;
   isEditMode?: boolean;
 }
@@ -18,8 +21,11 @@ const CVSection: React.FC<CVSectionProps> = ({
   type,
   title,
   content,
+  width,
+  height,
   onDelete,
   onEdit,
+  onResize,
   className = '',
   isEditMode = false,
 }) => {
@@ -42,28 +48,28 @@ const CVSection: React.FC<CVSectionProps> = ({
       case 'profile': {
         const profileContent = content as ProfileData;
         return (
-          <div>
+          <div className="profile-section">
             <h2 className="text-3xl font-bold mb-1">{profileContent.name}</h2>
             <div className="flex flex-wrap items-center gap-4 text-sm mb-4">
               <span className="text-zinc-600">{profileContent.tagline}</span>
               <span className="text-zinc-600">{profileContent.email}</span>
               <a href={profileContent.website} className="text-blue-500">{profileContent.websiteLabel}</a>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-neutral-100 rounded-lg p-4">
+            <div className="profile-grid">
+              <div className="card">
                 <img
-                  src={content.profileImage}
+                  src={profileContent.profileImage}
                   alt="Profile"
-                  className="rounded-lg w-full h-auto"
+                  className="rounded-lg w-full h-auto max-w-[200px] mx-auto"
                 />
               </div>
-              <div className="bg-neutral-100 rounded-lg p-4">
+              <div className="card">
                 <h3 className="font-medium mb-2">Apps I made</h3>
                 <div className="flex flex-wrap gap-2">
-                  {content.apps?.map((app: { name: string, color: string }, index: number) => (
+                  {profileContent.apps?.map((app: { name: string, color: string }, index: number) => (
                     <div
                       key={`app-${app.name}-${index}`}
-                      className="bg-blue-500 text-white rounded p-1 text-xs"
+                      className="tag text-white text-xs"
                       style={{ backgroundColor: app.color }}
                     >
                       {app.name}
@@ -71,11 +77,11 @@ const CVSection: React.FC<CVSectionProps> = ({
                   ))}
                 </div>
               </div>
-              <div className="bg-neutral-100 rounded-lg p-4">
+              <div className="card">
                 <h3 className="font-medium mb-2">Interests</h3>
                 <div className="flex flex-wrap gap-2">
-                  {content.interests?.map((interest: string, index: number) => (
-                    <div key={`interest-${interest}-${index}`} className="bg-neutral-200 rounded p-1 text-xs">
+                  {profileContent.interests?.map((interest: string, index: number) => (
+                    <div key={`interest-${interest}-${index}`} className="tag bg-neutral-200 text-xs">
                       {interest}
                     </div>
                   ))}
@@ -84,16 +90,18 @@ const CVSection: React.FC<CVSectionProps> = ({
             </div>
           </div>
         );
-
-      case 'experience':
+      }
+      
+      case 'experience': {
+        const experienceContent = content as ExperienceData;
         return (
-          <div>
+          <div className="experience-section">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">{title}</h2>
-              <span className="text-zinc-500">{content.years}</span>
+              <span className="text-zinc-500">{experienceContent.years}</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {content.jobs?.map((job: {
+            <div className="experience-grid">
+              {experienceContent.jobs?.map((job: {
                 company: string,
                 title: string,
                 period: string,
@@ -102,33 +110,37 @@ const CVSection: React.FC<CVSectionProps> = ({
                 logoBackground: string,
                 responsibilities: string[]
               }, index: number) => (
-                <div key={`job-${job.company}-${index}`} className="bg-neutral-100 rounded-lg p-4">
-                  <div className="flex gap-4 mb-2">
-                    <div
-                      className="w-12 h-12 flex items-center justify-center rounded"
-                      style={{ backgroundColor: job.logoBackground }}
-                    >
-                      {job.logo ? (
-                        <img src={job.logo} alt={job.company} className="w-8 h-8" />
-                      ) : (
-                        <span className="text-white font-bold">{job.company.charAt(0)}</span>
-                      )}
+                <div key={`job-${job.company}-${index}`} className="card">
+                  <div className="card-header">
+                    <div className="card-content">
+                      <div className="company-logo" style={{ backgroundColor: job.logoBackground }}>
+                        {job.logo ? (
+                          <img src={job.logo} alt={job.company} className="w-8 h-8" />
+                        ) : (
+                          <span className="text-white font-bold text-lg">{job.company.charAt(0)}</span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg">{job.company}</h3>
+                        <p className="text-zinc-600 font-medium">{job.title}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-bold">{job.company}</h3>
-                      <p className="text-zinc-600">{job.title}</p>
-                    </div>
-                    <div className="ml-auto text-right">
+                    <div className="text-right flex-shrink-0">
                       <span
-                        className={job.current ? "text-blue-500 border border-blue-500 rounded-full px-2 py-1 text-xs" : "text-zinc-500 text-xs"}
+                        className={job.current ? 
+                          "text-blue-500 border border-blue-500 rounded-full px-3 py-1 text-xs font-medium" : 
+                          "text-zinc-500 text-sm"
+                        }
                       >
                         {job.period}
                       </span>
                     </div>
                   </div>
-                  <ul className="list-disc pl-5 text-sm text-zinc-600 space-y-1">
+                  <ul className="list-disc pl-5 text-sm text-zinc-600 space-y-2 mt-3">
                     {job.responsibilities?.map((responsibility: string, idx: number) => (
-                      <li key={`resp-${idx}-${responsibility.slice(0, 10)}`}>{responsibility}</li>
+                      <li key={`resp-${idx}-${responsibility.slice(0, 10)}`} className="leading-relaxed">
+                        {responsibility}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -136,18 +148,20 @@ const CVSection: React.FC<CVSectionProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'skills':
+      case 'skills': {
+        const skillsContent = content as SkillsData;
         return (
           <div>
             <h2 className="text-2xl font-bold mb-4">{title}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {content.categories?.map((category: { name: string, skills: string[] }, index: number) => (
-                <div key={`category-${category.name}-${index}`} className="bg-neutral-100 rounded-lg p-4">
-                  <h3 className="font-medium mb-2">{category.name}</h3>
+            <div className="skills-grid">
+              {skillsContent.categories?.map((category: { name: string, skills: string[] }, index: number) => (
+                <div key={`category-${category.name}-${index}`} className="card">
+                  <h3 className="font-medium mb-3 text-lg">{category.name}</h3>
                   <div className="flex flex-wrap gap-2">
                     {category.skills?.map((skill: string, idx: number) => (
-                      <div key={`skill-${skill}-${idx}`} className="bg-neutral-200 rounded p-1 text-xs">
+                      <div key={`skill-${skill}-${idx}`} className="tag bg-blue-100 text-blue-800 text-sm font-medium">
                         {skill}
                       </div>
                     ))}
@@ -157,26 +171,31 @@ const CVSection: React.FC<CVSectionProps> = ({
             </div>
           </div>
         );
+      }
 
-      case 'education':
+      case 'education': {
+        const educationContent = content as EducationData;
         return (
           <div>
             <h2 className="text-2xl font-bold mb-4">{title}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {content.schools?.map((school: {
+            <div className="education-grid">
+              {educationContent.schools?.map((school: {
                 degree: string,
                 type: string,
                 institution?: string,
                 period: string
               }, index: number) => (
-                <div key={`school-${school.degree}-${index}`} className="bg-neutral-100 rounded-lg p-4">
-                  <div className="flex justify-between mb-2">
+                <div key={`school-${school.degree}-${index}`} className="card">
+                  <div className="card-header">
                     <div>
-                      <h3 className="font-bold">{school.degree}</h3>
-                      <p className="text-zinc-600">{school.type}</p>
+                      <h3 className="font-bold text-lg">{school.degree}</h3>
+                      <p className="text-zinc-600 font-medium">{school.type}</p>
+                      {school.institution && (
+                        <p className="text-zinc-500 text-sm">{school.institution}</p>
+                      )}
                     </div>
                     <div className="text-right">
-                      <span className="text-zinc-500 text-xs">{school.period}</span>
+                      <span className="text-zinc-500 text-sm font-medium">{school.period}</span>
                     </div>
                   </div>
                 </div>
@@ -184,6 +203,7 @@ const CVSection: React.FC<CVSectionProps> = ({
             </div>
           </div>
         );
+      }
 
       default:
         return <div>Unknown section type</div>;
@@ -230,7 +250,10 @@ const CVSection: React.FC<CVSectionProps> = ({
   return (
     <ResizableBox
       id={id}
+      initialWidth={width}
+      initialHeight={height}
       onDelete={onDelete}
+      onResize={onResize}
       className={`mb-8 ${className}`}
       isEditMode={isEditMode}
     >

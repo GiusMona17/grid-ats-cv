@@ -20,109 +20,128 @@ const DraggableContainer: React.FC<DraggableContainerProps> = ({
 }) => {
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
 
-  // Handle dragging start
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
+  console.log('🔄 DraggableContainer render:', { isEditMode, itemsCount: items.length });
+
+  // Handle drag start
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    if (!isEditMode) {
+      e.preventDefault();
+      return;
+    }
+
+    console.log('🔄 Drag start:', id);
     setDraggedItemId(id);
     e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
 
-    // Add some visual feedback
-    setTimeout(() => {
-      const element = document.getElementById(`section-${id}`);
-      if (element) {
-        element.style.opacity = '0.6';
-      }
-    }, 0);
+    // Add visual feedback
+    const element = e.target as HTMLElement;
+    element.style.opacity = '0.5';
   };
 
-  // Handle dragging over
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  // Handle drag over
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!isEditMode || !draggedItemId) return;
+    
     e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.currentTarget.classList.remove('drag-over');
+    e.dataTransfer.dropEffect = 'move';
   };
 
   // Handle drop
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropId: string) => {
+  const handleDrop = (e: React.DragEvent, dropTargetId: string) => {
+    if (!isEditMode) return;
+
     e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
+    
+    const draggedId = e.dataTransfer.getData('text/plain');
+    console.log('📦 Drop:', { draggedId, dropTargetId });
 
-    const dragId = e.dataTransfer.getData('text/plain');
-
-    if (dragId === dropId || !isEditMode) return;
-
-    // Find the items in the array
-    const draggedItem = items.find(item => item.id === dragId);
-    const dropItem = items.find(item => item.id === dropId);
-
-    if (!draggedItem || !dropItem) return;
-
-    // Swap the orders
-    const draggedOrder = draggedItem.order;
-    const dropOrder = dropItem.order;
-
-    // Create a new array with updated orders
-    const reorderedItems = items.map(item => {
-      if (item.id === dragId) {
-        return { ...item, order: dropOrder };
-      }
-      if (item.id === dropId) {
-        return { ...item, order: draggedOrder };
-      }
-      return item;
-    });
-
-    // Update parent
-    onReorder(reorderedItems);
-
-    // Reset opacity
-    const element = document.getElementById(`section-${dragId}`);
-    if (element) {
-      element.style.opacity = '1';
+    if (draggedId === dropTargetId) {
+      handleDragEnd();
+      return;
     }
 
-    setDraggedItemId(null);
+    // Find current items
+    const currentItems = [...items].sort((a, b) => a.order - b.order);
+    const draggedIndex = currentItems.findIndex(item => item.id === draggedId);
+    const dropIndex = currentItems.findIndex(item => item.id === dropTargetId);
+
+    if (draggedIndex === -1 || dropIndex === -1) {
+      console.error('❌ Item non trovato:', { draggedId, dropTargetId });
+      handleDragEnd();
+      return;
+    }
+
+    // Reorder items
+    const newItems = [...currentItems];
+    const [draggedItem] = newItems.splice(draggedIndex, 1);
+    newItems.splice(dropIndex, 0, draggedItem);
+
+    // Update orders
+    const reorderedItems = newItems.map((item, index) => ({
+      ...item,
+      order: index
+    }));
+
+    console.log('✅ Reorder:', reorderedItems.map(item => item.id));
+    onReorder(reorderedItems);
+    handleDragEnd();
   };
 
-  // Handle end of dragging
+  // Handle drag end
   const handleDragEnd = () => {
     if (draggedItemId) {
-      const element = document.getElementById(`section-${draggedItemId}`);
+      const element = document.querySelector(`[data-section-id="${draggedItemId}"]`) as HTMLElement;
       if (element) {
         element.style.opacity = '1';
       }
     }
     setDraggedItemId(null);
+    console.log('🏁 Drag end');
   };
 
-  // Create child elements with drag props
-  const childrenWithProps = React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
-      // Get the id from child props
-      const childId = child.props.id;
+  // Enhanced children with drag handlers
+  const enhancedChildren = React.Children.map(children, (child, index) => {
+    if (!React.isValidElement(child)) return child;
 
-      if (!childId) return child;
+    const childId = child.props.id;
+    if (!childId) return child;
 
-      // Add drag handlers
-      return React.cloneElement(child, {
-        ...child.props,
-        id: `section-${childId}`,
-        draggable: isEditMode,
-        onDragStart: (e: React.DragEvent<HTMLDivElement>) => handleDragStart(e, childId),
-        onDragOver: handleDragOver,
-        onDragLeave: handleDragLeave,
-        onDrop: (e: React.DragEvent<HTMLDivElement>) => handleDrop(e, childId),
-        onDragEnd: handleDragEnd,
-      });
-    }
-    return child;
+    const isDragged = draggedItemId === childId;
+
+    return React.cloneElement(child, {
+      ...child.props,
+      'data-section-id': childId,
+      draggable: isEditMode,
+      onDragStart: (e: React.DragEvent) => handleDragStart(e, childId),
+      onDragOver: handleDragOver,
+      onDrop: (e: React.DragEvent) => handleDrop(e, childId),
+      onDragEnd: handleDragEnd,
+      style: {
+        ...child.props.style,
+        cursor: isEditMode ? 'move' : 'default',
+        opacity: isDragged ? 0.5 : 1,
+        transition: 'opacity 0.2s ease',
+        border: isEditMode ? '2px dashed transparent' : 'none',
+      },
+      className: `${child.props.className || ''} ${isEditMode ? 'draggable-section' : ''}`,
+    });
   });
 
   return (
     <div className="draggable-container">
-      {childrenWithProps}
+      {isEditMode && (
+        <div className="mb-4 p-3 bg-blue-100 border border-blue-300 rounded-lg">
+          <p className="text-blue-800 text-sm">
+            🔄 <strong>Modalità Drag & Drop attiva</strong><br />
+            Trascina le sezioni per riordinarle. Stato: {draggedItemId ? `Trascinando ${draggedItemId}` : 'Pronto'}
+          </p>
+        </div>
+      )}
+      
+      <div className="space-y-4">
+        {enhancedChildren}
+      </div>
     </div>
   );
 };

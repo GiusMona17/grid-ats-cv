@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface CustomizationPanelProps {
   onUpdateTheme: (theme: string) => void;
   onResetData: () => void;
   onToggleEditMode: () => void;
+  onExportData: () => void;
+  onImportData: (event: React.ChangeEvent<HTMLInputElement>) => void;
   isEditMode: boolean;
 }
-
 const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
   onUpdateTheme,
   onResetData,

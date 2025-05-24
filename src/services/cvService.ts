@@ -1,4 +1,4 @@
-import type { CVData, CVSectionItem, SectionType } from '../types';
+import type { CVData, CVSectionItem, SectionType, SectionData } from '../types';
 
 // Generate a unique ID
 export const generateId = (): string => {
@@ -127,8 +127,8 @@ export const createSection = (type: SectionType, title: string, order: number): 
 // Default CV data
 export const getDefaultCVData = (): CVData => {
   return {
-    title: 'Standard version',
-    subtitle: 'cv-standard',
+    title: 'Mathis Garcia',
+    subtitle: 'Curriculum Vitae',
     sections: [
       {
         id: generateId(),
@@ -136,7 +136,7 @@ export const getDefaultCVData = (): CVData => {
         title: 'Profile',
         content: {
           name: 'Mathis Garcia',
-          tagline: '29 years old, French',
+          tagline: '29 anni, Italiano',
           email: 'hello@mathisgarcia.com',
           website: 'https://mathisgarcia.com',
           websiteLabel: 'mathisgarcia.com',
@@ -153,21 +153,21 @@ export const getDefaultCVData = (): CVData => {
       {
         id: generateId(),
         type: 'experience',
-        title: 'Experience',
+        title: 'Esperienza Professionale',
         content: {
-          years: '10+ years',
+          years: '10+ anni',
           jobs: [
             {
               company: 'Adobe',
               title: 'UX/UI Designer',
-              period: '2022 - now',
+              period: '2022 - oggi',
               current: true,
               logoBackground: '#ef4444',
               responsibilities: [
-                'Growth: Acquisition funnel optimization',
-                'Design System: created component library',
-                'Web design: Redesign and optimization of adobe.com pages',
-                'Tools: Figma, Jira, Teams, UserTesting, ContentSquare'
+                'Crescita: Ottimizzazione del funnel di acquisizione',
+                'Design System: Creazione di libreria di componenti',
+                'Web design: Redesign e ottimizzazione delle pagine adobe.com',
+                'Strumenti: Figma, Jira, Teams, UserTesting, ContentSquare'
               ]
             },
             {
@@ -176,10 +176,10 @@ export const getDefaultCVData = (): CVData => {
               period: '2020 - 2022',
               logoBackground: '#f97316',
               responsibilities: [
-                'Re-branding: New logo of the company, Graphic Design',
-                'Product design: UI prototyping, Motion design, Design system',
-                'New website of the company: actio.com',
-                'Tools: Figma, Adobe CC Suite, Slack, Asana'
+                'Re-branding: Nuovo logo aziendale, Graphic Design',
+                'Product design: Prototipazione UI, Motion design, Design system',
+                'Nuovo sito web aziendale: actio.com',
+                'Strumenti: Figma, Adobe CC Suite, Slack, Asana'
               ]
             }
           ]
@@ -189,7 +189,7 @@ export const getDefaultCVData = (): CVData => {
       {
         id: generateId(),
         type: 'experience',
-        title: 'Previous Experience',
+        title: 'Esperienza Precedente',
         content: {
           years: '',
           jobs: [
@@ -199,10 +199,10 @@ export const getDefaultCVData = (): CVData => {
               period: '2018 - 2020',
               logoBackground: '#ef4444',
               responsibilities: [
-                'Multi-tasking: UX Design, Product Design, Graphic Design',
-                'B2B Products: Websites, Mobile apps',
-                'Tools: Figma, Adobe Illustrator, Wordpress',
-                'Motion design: Logo animations and Advertising'
+                'Multitasking: UX Design, Product Design, Graphic Design',
+                'Prodotti B2B: Siti web, App mobile',
+                'Strumenti: Figma, Adobe Illustrator, Wordpress',
+                'Motion design: Animazioni logo e Advertising'
               ]
             },
             {
@@ -211,10 +211,10 @@ export const getDefaultCVData = (): CVData => {
               period: '2017 - 2018',
               logoBackground: '#6366f1',
               responsibilities: [
-                'New website of the company: qucit.com',
-                'New Logo design and Re-branding',
-                'UX/UI for a B2B Dashboard with data analysis',
-                'Creation of visuals for Social Media communication'
+                'Nuovo sito web aziendale: qucit.com',
+                'Nuovo design del Logo e Re-branding',
+                'UX/UI per Dashboard B2B con analisi dati',
+                'Creazione di visual per comunicazione Social Media'
               ]
             }
           ]
@@ -224,11 +224,11 @@ export const getDefaultCVData = (): CVData => {
       {
         id: generateId(),
         type: 'skills',
-        title: 'Skills',
+        title: 'Competenze',
         content: {
           categories: [
             {
-              name: 'Design tools',
+              name: 'Strumenti di Design',
               skills: ['Figma', 'Illustrator', 'Photoshop', 'Sketch']
             },
             {
@@ -236,11 +236,11 @@ export const getDefaultCVData = (): CVData => {
               skills: ['Premiere Pro', 'After Effects']
             },
             {
-              name: 'Languages',
-              skills: ['French', 'English', 'Spanish', 'German']
+              name: 'Lingue',
+              skills: ['Italiano', 'Inglese', 'Spagnolo', 'Tedesco']
             },
             {
-              name: 'Coding',
+              name: 'Programmazione',
               skills: ['HTML', 'CSS', 'JavaScript', 'React', 'WordPress']
             }
           ]
@@ -250,19 +250,19 @@ export const getDefaultCVData = (): CVData => {
       {
         id: generateId(),
         type: 'education',
-        title: 'Education',
+        title: 'Formazione',
         content: {
           schools: [
             {
               degree: 'Web & Design',
-              type: 'University degree',
-              institution: 'amU',
+              type: 'Laurea universitaria',
+              institution: 'Università di Milano',
               period: '2015 - 2017'
             },
             {
-              degree: 'Computer Science',
-              type: 'High-School Diploma (Bac S)',
-              institution: '',
+              degree: 'Informatica',
+              type: 'Diploma di Scuola Superiore',
+              institution: 'Liceo Scientifico',
               period: '2013 - 2015'
             }
           ]
@@ -272,15 +272,4 @@ export const getDefaultCVData = (): CVData => {
     ],
     theme: 'light'
   };
-};
-
-// Save CV data to local storage
-export const saveCV = (data: CVData): void => {
-  localStorage.setItem('cv-data', JSON.stringify(data));
-};
-
-// Load CV data from local storage
-export const loadCV = (): CVData | null => {
-  const data = localStorage.getItem('cv-data');
-  return data ? JSON.parse(data) : null;
 };

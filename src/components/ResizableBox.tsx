@@ -18,8 +18,8 @@ type ResizeHandlePosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-
 const ResizableBox: React.FC<ResizableBoxProps> = ({
   id,
   children,
-  initialWidth = 300,
-  initialHeight = 200,
+  initialWidth,
+  initialHeight,
   minWidth = 200,
   minHeight = 100,
   className = '',
@@ -27,8 +27,8 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
   onDelete,
   onResize,
 }) => {
-  const [width, setWidth] = useState(initialWidth);
-  const [height, setHeight] = useState(initialHeight);
+  const [width, setWidth] = useState<number | undefined>(initialWidth);
+  const [height, setHeight] = useState<number | undefined>(initialHeight);
   const [isResizing, setIsResizing] = useState(false);
   const [activeHandle, setActiveHandle] = useState<ResizeHandlePosition | null>(null);
   const [isSelected, setIsSelected] = useState(false);
@@ -106,16 +106,21 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
     setActiveHandle(position);
     setIsSelected(true);
 
+    const currentWidth = width || boxRef.current.offsetWidth;
+    const currentHeight = height || boxRef.current.offsetHeight;
+
     startPosRef.current = {
       x: e.clientX,
       y: e.clientY,
-      width,
-      height
+      width: currentWidth,
+      height: currentHeight
     };
   };
 
   const handleBoxClick = () => {
-    setIsSelected(true);
+    if (isEditMode) {
+      setIsSelected(true);
+    }
   };
 
   const handleDelete = () => {
@@ -124,14 +129,22 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
     }
   };
 
+  // Style object for dynamic sizing
+  const boxStyle: React.CSSProperties = {
+    width: width ? `${width}px` : '100%',
+    height: height ? `${height}px` : 'auto',
+    minWidth: `${minWidth}px`,
+    minHeight: `${minHeight}px`,
+  };
+
   return (
     <div
       ref={boxRef}
       className={`resizable-box ${isSelected ? 'selected' : ''} ${isEditMode ? 'editing' : ''} ${className}`}
-      style={{ width, height }}
+      style={boxStyle}
       onClick={handleBoxClick}
     >
-      {isSelected && isEditMode && (
+      {isSelected && isEditMode && onDelete && (
         <div className="box-controls">
           <button
             className="control-button"
@@ -142,7 +155,11 @@ const ResizableBox: React.FC<ResizableBoxProps> = ({
           </button>
         </div>
       )}
-      {children}
+      
+      <div className="w-full h-full">
+        {children}
+      </div>
+      
       {isSelected && isEditMode && (
         <>
           <div
